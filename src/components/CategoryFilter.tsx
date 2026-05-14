@@ -1,42 +1,32 @@
 // src/components/CategoryFilter.tsx
 // -----------------------------------------------------------------------------
-// Single-select category chip row. The "All" chip clears the filter.
+// Single-select topic chip row. The "All" chip clears the filter.
 //
-// The category list is sourced from `CATEGORY_LABELS` in
-// `config/categories.config.ts` so adding a new category in the service layer
-// is enough — the chip appears automatically. The accent colors come from
-// the `category-*` tokens defined in `tailwind.config.js`.
+// Topic order comes from `TOPIC_CHIP_ORDER` in `categories.config.ts`.
+// Selecting a chip + Search narrows PubMed ESearch via `composePubMedQuery`.
 // -----------------------------------------------------------------------------
 
-import { CATEGORY_LABELS } from '@/config/categories.config';
+import { CATEGORY_LABELS, TOPIC_CHIP_ORDER } from '@/config/categories.config';
 import type { Category } from '@/types/article.types';
 
-/** Hex-named class lookup. We pre-list classes so Tailwind's JIT doesn't
- *  purge them. (Tailwind only keeps classes it sees as full strings in source.) */
+/** Accent dots — Tailwind safelist relies on literal strings here. */
 const CATEGORY_DOT: Record<Category, string> = {
   ORGANOID: 'bg-category-organoid',
+  STEM_CELLS: 'bg-category-stemcell',
   CANCER: 'bg-category-cancer',
   CRISPR: 'bg-category-crispr',
   EPIGENETICS: 'bg-category-epigenetics',
   GENE_THERAPY: 'bg-category-gene',
-  UNCATEGORIZED: 'bg-category-other',
+  SINGLE_CELL_OMICS: 'bg-category-omics',
+  IMMUNOLOGY: 'bg-category-immunology',
+  GENERAL_MB: 'bg-category-general',
 };
 
-/** Order chips are displayed in. UNCATEGORIZED intentionally last. */
-const CATEGORY_ORDER: Category[] = [
-  'ORGANOID',
-  'CANCER',
-  'CRISPR',
-  'EPIGENETICS',
-  'GENE_THERAPY',
-  'UNCATEGORIZED',
-];
-
 export interface CategoryFilterProps {
-  /** `null` means "All categories" (no filter). */
+  /** `null` means "All topics" (full base query only). */
   value: Category | null;
   onChange: (next: Category | null) => void;
-  /** Optional counts per category for "ORGANOID (12)" style labels. */
+  /** Optional counts per category for chip labels such as Organoid (12). */
   counts?: Partial<Record<Category, number>>;
   disabled?: boolean;
 }
@@ -45,17 +35,16 @@ export function CategoryFilter({ value, onChange, counts, disabled }: CategoryFi
   return (
     <div
       role="radiogroup"
-      aria-label="Filter by category"
+      aria-label="Filter by topic"
       className="flex flex-wrap items-center gap-2"
     >
-      {/* "All" chip — clears the single-select. */}
       <Chip
         active={value === null}
         onClick={() => onChange(null)}
         disabled={disabled}
         label="All"
       />
-      {CATEGORY_ORDER.map((cat) => {
+      {TOPIC_CHIP_ORDER.map((cat) => {
         const active = value === cat;
         const count = counts?.[cat];
         return (
@@ -64,7 +53,9 @@ export function CategoryFilter({ value, onChange, counts, disabled }: CategoryFi
             active={active}
             onClick={() => onChange(cat)}
             disabled={disabled}
-            label={count !== undefined ? `${CATEGORY_LABELS[cat]} (${count})` : CATEGORY_LABELS[cat]}
+            label={
+              count !== undefined ? `${CATEGORY_LABELS[cat]} (${count})` : CATEGORY_LABELS[cat]
+            }
             dotClass={CATEGORY_DOT[cat]}
           />
         );
@@ -73,16 +64,10 @@ export function CategoryFilter({ value, onChange, counts, disabled }: CategoryFi
   );
 }
 
-// -----------------------------------------------------------------------------
-// Local Chip component. Kept in the same file because it's tightly coupled to
-// the chip row's visual language and isn't used elsewhere.
-// -----------------------------------------------------------------------------
-
 interface ChipProps {
   active: boolean;
   onClick: () => void;
   label: string;
-  /** Optional Tailwind class for the colored leading dot. */
   dotClass?: string;
   disabled?: boolean;
 }

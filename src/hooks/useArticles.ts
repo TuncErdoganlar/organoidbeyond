@@ -7,8 +7,8 @@
 // preference and keeps PubMed traffic low.
 //
 // Public surface:
-//   const { data, status, error, search, reset } = useArticles();
-//   search({ window: '3m' });
+//   const { data, status, error, search, reset, lastSearchTopic } = useArticles();
+//   search({ window: '3m', topic: 'ORGANOID' });
 //
 //   status ∈ 'idle' | 'loading' | 'success' | 'error'
 //
@@ -22,6 +22,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { fetchArticles } from '@/services/articleAggregator.service';
 import type {
   Article,
+  Category,
   FetchArticlesOptions,
   TimeWindow,
 } from '@/types/article.types';
@@ -38,6 +39,8 @@ export interface UseArticlesReturn {
   error: string | null;
   /** The time window the most recent search used (for UI display). */
   lastWindow: TimeWindow | null;
+  /** Topic facet used in the last successful ESearch (`null` = All / not narrowed). */
+  lastSearchTopic: Category | null;
   /** Fire a new search. Cancels any in-flight request first. */
   search: (options: { window: TimeWindow } & Omit<FetchArticlesOptions, 'window' | 'signal'>) => Promise<void>;
   /** Clear results back to the empty/idle state. */
@@ -49,17 +52,10 @@ export function useArticles(): UseArticlesReturn {
   const [status, setStatus] = useState<FetchStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [lastWindow, setLastWindow] = useState<TimeWindow | null>(null);
+  const [lastSearchTopic, setLastSearchTopic] = useState<Category | null>(null);
 
-  // We keep the AbortController in a ref (not state) so calling `abort()` on
-  // a previous request doesn't trigger a re-render. The ref survives renders
-  // and we explicitly null it after each completed request.
   const inFlightRef = useRef<AbortController | null>(null);
 
-  /**
-   * Cancel any in-flight request when the component unmounts. Without this,
-   * a slow response that arrives after unmount would call `setState` on a
-   * disposed component (a classic React warning).
-   */
   useEffect(() => {
     return () => {
       inFlightRef.current?.abort();
@@ -67,7 +63,6 @@ export function useArticles(): UseArticlesReturn {
   }, []);
 
   const search = useCallback<UseArticlesReturn['search']>(async (options) => {
-    // 1. Abort any previous request — only the latest user click matters.
     inFlightRef.current?.abort();
     const controller = new AbortController();
     inFlightRef.current = controller;
@@ -81,14 +76,13 @@ export function useArticles(): UseArticlesReturn {
         ...options,
         signal: controller.signal,
       });
-      // If a newer search aborted this one, do not commit stale data.
       if (controller.signal.aborted) return;
 
+      const t = options.topic ?? null;
+      setLastSearchTopic(t !== null && t !== 'GENERAL_MB' ? t : null);
       setData(articles);
       setStatus('success');
     } catch (err) {
-      // Aborts are intentional; treat them as a no-op (status stays loading
-      // because a fresh request has already taken over).
       if (controller.signal.aborted) return;
 
       const message =
@@ -96,7 +90,6 @@ export function useArticles(): UseArticlesReturn {
       setError(message);
       setStatus('error');
     } finally {
-      // Clear the ref so we don't try to abort an already-finished request.
       if (inFlightRef.current === controller) {
         inFlightRef.current = null;
       }
@@ -110,7 +103,8 @@ export function useArticles(): UseArticlesReturn {
     setStatus('idle');
     setError(null);
     setLastWindow(null);
+    setLastSearchTopic(null);
   }, []);
 
-  return { data, status, error, lastWindow, search, reset };
+  return { data, status, error, lastWindow, lastSearchTopic, search, reset };
 }

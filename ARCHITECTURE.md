@@ -14,11 +14,12 @@ files so the project can boot.
 ## 1. Architectural Style
 
 The application follows a **layered, dependency-inverted architecture** on top
-of a Vite + React + TypeScript SPA. There is no custom backend server; the
-browser talks directly to the public NCBI E-utilities endpoint. The "backend"
-in the user prompt therefore refers to the **service layer** that lives inside
-the SPA — a clean abstraction over the network so the UI never sees raw XML or
-HTTP details.
+of a Vite + React + TypeScript SPA. The browser calls **same-origin** `/api/pubmed`;
+on **Vercel** a serverless function (`api/pubmed.ts`) forwards GET requests to NCBI
+E-utilities. In **`npm run dev`** / **`vite preview`**, Vite's middleware mirrors
+that proxy so behaviour matches production. Locally (outside Vercel) there is still
+no long-running backend process — only static assets plus the optional serverless /
+dev proxy glue.
 
 ```
 ┌────────────────────────────────────────────────────────────────┐

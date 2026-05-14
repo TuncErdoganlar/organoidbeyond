@@ -14,12 +14,14 @@
 //   4. Runs the `categorizer` over each article and stamps `categories`.
 //   5. Runs a client-side date safety net (handles partial dates).
 //   6. Sorts newest-first and returns.
+//   Topic is applied at step 2 (ESearch query), not post-hoc.
 // -----------------------------------------------------------------------------
 
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_QUERY,
 } from '@/config/api.config';
+import { composePubMedQuery } from '@/config/pubmedTopicQuery';
 import { categorize } from '@/utils/categorizer';
 import {
   isWithinRange,
@@ -40,7 +42,8 @@ export async function fetchArticles(
   options: FetchArticlesOptions = {},
 ): Promise<Article[]> {
   const window = options.window ?? '3m';
-  const query = options.query ?? DEFAULT_QUERY;
+  const rawBase = options.query ?? DEFAULT_QUERY;
+  const query = composePubMedQuery(rawBase, options.topic);
   const pageSize = options.pageSize ?? DEFAULT_PAGE_SIZE;
   const pageOffset = options.pageOffset ?? 0;
   const signal = options.signal;

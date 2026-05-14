@@ -23,12 +23,15 @@ export default {
         // Subtle category accents. Kept low-saturation so cards still read as
         // a unified set — the category dot is a hint, not a decoration.
         category: {
-          organoid:    '#0d9488', // teal-600
-          cancer:      '#dc2626', // red-600
-          crispr:      '#7c3aed', // violet-600
+          organoid: '#0d9488', // teal-600
+          stemcell: '#059669', // emerald-600
+          cancer: '#dc2626', // red-600
+          crispr: '#7c3aed', // violet-600
           epigenetics: '#ca8a04', // yellow-600
-          gene:        '#0284c7', // sky-600
-          other:       '#64748b', // slate-500
+          gene: '#0284c7', // sky-600
+          omics: '#c2410c', // orange-700
+          immunology: '#a16207', // amber-700
+          general: '#475569', // slate-600
         },
       },
       fontFamily: {

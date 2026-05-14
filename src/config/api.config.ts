@@ -4,17 +4,17 @@
 // want to swap to a corporate proxy, this is the *only* file to touch.
 // -----------------------------------------------------------------------------
 
-/** Base URL for every E-utilities endpoint. */
+/** Base URL for every E-utilities endpoint (documentation / deep links only). */
 export const PUBMED_BASE_URL = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils';
 
 /**
- * Endpoints we use. ESearch returns JSON PMID lists; EFetch returns XML full
- * records (PubMed does not support JSON for EFetch). See `pubmed.service.ts`.
+ * Same-origin PubMed gateway. The browser talks to `/api/pubmed`; Vercel (or Vite’s
+ * dev/preview middleware) forwards to `e*.ncbi.nlm.nih.gov`, avoiding blocked
+ * cross-origin calls in production browsers.
+ *
+ * Payload is E-utilities GET params plus `op=esearch|efetch`; see `pubmedUpstream.mjs`.
  */
-export const PUBMED_ENDPOINTS = {
-  eSearch: `${PUBMED_BASE_URL}/esearch.fcgi`,
-  eFetch: `${PUBMED_BASE_URL}/efetch.fcgi`,
-} as const;
+export const PUBMED_PROXY_URL = '/api/pubmed';
 
 /**
  * The default research query. Restricts results to the Mol-Bio / Genetics

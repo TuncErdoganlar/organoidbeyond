@@ -16,11 +16,14 @@ import type { Article, Category } from '@/types/article.types';
  *  in `tailwind.config.js`. */
 const CATEGORY_BADGE: Record<Category, string> = {
   ORGANOID: 'bg-category-organoid/10 text-category-organoid',
+  STEM_CELLS: 'bg-category-stemcell/10 text-category-stemcell',
   CANCER: 'bg-category-cancer/10 text-category-cancer',
   CRISPR: 'bg-category-crispr/10 text-category-crispr',
   EPIGENETICS: 'bg-category-epigenetics/10 text-category-epigenetics',
   GENE_THERAPY: 'bg-category-gene/10 text-category-gene',
-  UNCATEGORIZED: 'bg-slate-100 text-slate-600',
+  SINGLE_CELL_OMICS: 'bg-category-omics/10 text-category-omics',
+  IMMUNOLOGY: 'bg-category-immunology/10 text-category-immunology',
+  GENERAL_MB: 'bg-category-general/10 text-category-general',
 };
 
 export interface ArticleCardProps {

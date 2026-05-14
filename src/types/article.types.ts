@@ -16,11 +16,15 @@
  */
 export type Category =
   | 'ORGANOID'
+  | 'STEM_CELLS'
   | 'CANCER'
   | 'CRISPR'
   | 'EPIGENETICS'
   | 'GENE_THERAPY'
-  | 'UNCATEGORIZED';
+  | 'SINGLE_CELL_OMICS'
+  | 'IMMUNOLOGY'
+  /** Fallback when nothing else matched — not shown as "Other"; see labels. */
+  | 'GENERAL_MB';
 
 /**
  * The time-range filter exposed to the user. The string codes are kept
@@ -74,7 +78,7 @@ export interface Article {
 
   /**
    * Categories this article matched, sorted by match-strength descending.
-   * Always contains at least one element (falls back to 'UNCATEGORIZED').
+   * Always contains at least one element (falls back to GENERAL_MB).
    */
   categories: Category[];
 
@@ -94,6 +98,12 @@ export interface Article {
 export interface FetchArticlesOptions {
   /** Time window the user selected; defaults to '3m' in the service. */
   window?: TimeWindow;
+  /**
+   * When non-null (and not GENERAL_MB), AND a topic-specific clause into
+   * PubMed ESearch so retrieved articles align with that theme.
+   * `null`/omitted/`GENERAL_MB` → base query only.
+   */
+  topic?: Category | null;
   /** Override the default Mol-Bio/Genetics query if needed. */
   query?: string;
   /** Max articles to return. PubMed caps a single ESearch at 10_000. */

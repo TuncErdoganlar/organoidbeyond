@@ -10,11 +10,13 @@
 //     skeletons / error / no-results / grid of cards).
 //
 // Notes:
-//   - The category filter is applied **client-side** (via `useMemo`). The
-//     service layer always returns the full set for the chosen window; the UI
-//     just slices it. This means category clicks are instant — no extra HTTP.
-//   - Category counts shown next to each chip are also derived client-side,
-//     so the user knows how big each bucket is before clicking.
+//   - Topic narrows PubMed **ESearch** (see `pubmedTopicQuery.ts`). The
+//     categorizer still tags cards for badges and cross-topic counts.
+//   - Selecting a different topic **without** a new Search re-filters the
+//     cached list client-side.
+//   - Changing the time window after a successful search triggers a fresh
+//     PubMed fetch but keeps the selected topic chip. While idle/error,
+//     changing the window only updates local state.
 // -----------------------------------------------------------------------------
 
 import { useMemo, useState, type ReactNode } from 'react';
@@ -33,7 +35,7 @@ export default function App() {
   const [category, setCategory] = useState<Category | null>(null);
 
   // ----- Data state — comes from the service-layer hook. -----
-  const { data, status, error, search, lastWindow } = useArticles();
+  const { data, status, error, search, lastWindow, lastSearchTopic } = useArticles();
 
   // ----- Derived: count articles per category for the chip labels. -----
   // Memoized so a re-render from filter-state changes doesn't recompute.
@@ -50,18 +52,28 @@ export default function App() {
   // ----- Derived: the actual visible list after the category filter. -----
   const visibleArticles = useMemo(() => {
     if (category === null) return data;
+    if (category === 'GENERAL_MB') return data;
+    if (lastSearchTopic === category) return data;
     return data.filter((a) => a.categories.includes(category));
-  }, [data, category]);
+  }, [data, category, lastSearchTopic]);
 
   // ----- Handlers -----
 
-  /** Fires when the user clicks the Search button OR the Try-again button. */
+  /** Search / retry: PubMed fetch using the current time window and topic (All = base query only). */
   const handleSearch = () => {
-    // Always reset the category to "All" on a fresh search — counts may
-    // change with the new dataset and a previously-selected category might
-    // now have zero results.
-    setCategory(null);
-    void search({ window });
+    void search({ window, topic: category });
+  };
+
+  /**
+   * Time-window pills update local state always. After results have loaded once,
+   * a window change reruns Search automatically so the dataset matches the UI.
+   * The selected topic is preserved so filtering stays coherent across windows.
+   */
+  const handleWindowChange = (next: TimeWindow) => {
+    setWindow(next);
+    if (status === 'success') {
+      void search({ window: next, topic: category });
+    }
   };
 
   // ----- Body composition -----
@@ -85,11 +97,11 @@ export default function App() {
 
       <ControlPanel
         window={window}
-        onWindowChange={setWindow}
+        onWindowChange={handleWindowChange}
         category={category}
         onCategoryChange={setCategory}
-        showCategories={status === 'success' && data.length > 0}
         categoryCounts={categoryCounts}
+        showCategoryCounts={status === 'success'}
         onSearch={handleSearch}
         loading={status === 'loading'}
       />

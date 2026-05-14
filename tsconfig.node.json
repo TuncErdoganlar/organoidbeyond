@@ -11,5 +11,5 @@
     // `node:path` are typed. Requires `@types/node` in devDependencies.
     "types": ["node"]
   },
-  "include": ["vite.config.ts"]
+  "include": ["vite.config.ts", "pubmedUpstream.ts", "api/pubmed.ts"]
 }

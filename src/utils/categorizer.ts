@@ -28,8 +28,8 @@ function haystackFor(article: Pick<Article, 'title' | 'abstract' | 'meshTerms'>)
 /**
  * Returns the categories that match `article`. The result is sorted by the
  * number of distinct keyword hits descending (so the "strongest" category
- * shows first in the UI), and always non-empty — the fallback is
- * `['UNCATEGORIZED']`.
+ * shows first in the UI). If nothing matched, defaults to GENERAL_MB — a neutral
+ * bucket for miscellaneous mol-bio papers (avoiding a meaningless "Other" chip).
  *
  * Note we still test the original-case patterns against the lowercased
  * haystack: the regexes in `CATEGORY_RULES` already use the `i` flag, so
@@ -56,7 +56,7 @@ export function categorize(
     if (score > 0) scored.push({ category: rule.category, score });
   }
 
-  if (scored.length === 0) return ['UNCATEGORIZED'];
+  if (scored.length === 0) return ['GENERAL_MB'];
 
   // Stable descending sort by score so "stronger" categories surface first.
   scored.sort((a, b) => b.score - a.score);

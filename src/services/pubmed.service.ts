@@ -17,9 +17,10 @@
 // only `categories.config.ts` moves. Etc.
 // -----------------------------------------------------------------------------
 
+// Browser → same-origin `/api/pubmed`; Vercel serverless or Vite middleware → NCBI (`op=esearch|efetch`).
 import { getJson, getText } from './http.client';
 import {
-  PUBMED_ENDPOINTS,
+  PUBMED_PROXY_URL,
   getPubmedApiKey,
   getPubmedToolIdentity,
 } from '@/config/api.config';
@@ -63,8 +64,9 @@ export async function searchPmids(params: ESearchParams): Promise<string[]> {
   // `datetype=pdat` filters by publication date (the most intuitive choice;
   // alternatives like `edat` filter by Entrez date, which can lag by days).
   const data = await getJson<ESearchResponse>(
-    PUBMED_ENDPOINTS.eSearch,
+    PUBMED_PROXY_URL,
     {
+      op: 'esearch',
       db: 'pubmed',
       term: params.query,
       mindate: params.minDate,
@@ -114,8 +116,9 @@ export async function fetchArticlesByIds(
     const chunk = pmids.slice(i, i + chunkSize);
 
     const xml = await getText(
-      PUBMED_ENDPOINTS.eFetch,
+      PUBMED_PROXY_URL,
       {
+        op: 'efetch',
         db: 'pubmed',
         id: chunk.join(','),
         retmode: 'xml',
@@ -243,7 +246,7 @@ function normalizePubmedArticle(node: PubmedArticleNode): Article | null {
     pubmedUrl: `https://pubmed.ncbi.nlm.nih.gov/${pmid}/`,
     // `categories` is filled in by the aggregator; default to a placeholder
     // so the type is fully formed at this point.
-    categories: ['UNCATEGORIZED'],
+    categories: ['GENERAL_MB'],
     meshTerms,
   };
 }
