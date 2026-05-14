@@ -5,7 +5,11 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "strict": true
+    "strict": true,
+    // Tells the compiler that the files in this project run in Node (Vite's
+    // config layer), so Node globals like __dirname and built-in modules like
+    // `node:path` are typed. Requires `@types/node` in devDependencies.
+    "types": ["node"]
   },
   "include": ["vite.config.ts"]
 }
