@@ -1,5 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { resolvePubmedUpstreamUrl } from '../pubmedUpstream';
+import {
+  createTimeoutSignal,
+  proxyFetchPubmed,
+  resolvePubmedUpstreamUrl,
+  searchParamsFromNodeRequest,
+} from './pubmedUpstream';
 
 const TIMEOUT_MS = 25_000;
 
@@ -11,8 +16,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const host = typeof req.headers?.host === 'string' ? req.headers.host : 'localhost';
-  const sp = new URL(req.url ?? '', `https://${host}`).searchParams;
+  const sp = searchParamsFromNodeRequest(
+    typeof req.url === 'string' ? req.url : undefined,
+    req.query,
+  );
 
   const built = resolvePubmedUpstreamUrl(sp);
   if (!built.ok) {
@@ -24,11 +31,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const ctl = AbortSignal.timeout(TIMEOUT_MS);
-    const upstream = await fetch(built.url, {
-      headers: { Accept: 'application/json, text/xml, text/plain, */*' },
-      signal: ctl,
-    });
+    const signal = createTimeoutSignal(TIMEOUT_MS);
+    const upstream = await proxyFetchPubmed(built.url, signal);
 
     res.statusCode = upstream.status;
     const ct = upstream.headers.get('content-type');

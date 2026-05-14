@@ -9,7 +9,12 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 
-import { resolvePubmedUpstreamUrl } from './pubmedUpstream';
+import {
+  createTimeoutSignal,
+  proxyFetchPubmed,
+  resolvePubmedUpstreamUrl,
+  searchParamsFromNodeRequest,
+} from './api/pubmedUpstream';
 
 function pubmedProxyPlugin(mode: string): Plugin {
   const serverApiKey = () => loadEnv(mode, process.cwd(), '').PUBMED_API_KEY?.trim();
@@ -32,7 +37,7 @@ function pubmedProxyPlugin(mode: string): Plugin {
     }
 
     try {
-      const sp = new URL(req.url, 'http://localhost').searchParams;
+      const sp = searchParamsFromNodeRequest(req.url, undefined);
       const built = resolvePubmedUpstreamUrl(sp, { serverApiKey: serverApiKey() });
       if (!built.ok) {
         res.statusCode = built.status;
@@ -42,11 +47,8 @@ function pubmedProxyPlugin(mode: string): Plugin {
         return;
       }
 
-      const ctl = AbortSignal.timeout(25_000);
-      const upstream = await fetch(built.url, {
-        headers: { Accept: 'application/json, text/xml, text/plain, */*' },
-        signal: ctl,
-      });
+      const signal = createTimeoutSignal(25_000);
+      const upstream = await proxyFetchPubmed(built.url, signal);
       res.statusCode = upstream.status;
       const ct = upstream.headers.get('content-type');
       if (ct) res.setHeader('Content-Type', ct);

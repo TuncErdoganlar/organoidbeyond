@@ -12,7 +12,7 @@ export const PUBMED_BASE_URL = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils';
  * dev/preview middleware) forwards to `e*.ncbi.nlm.nih.gov`, avoiding blocked
  * cross-origin calls in production browsers.
  *
- * Payload is E-utilities GET params plus `op=esearch|efetch`; see `pubmedUpstream.mjs`.
+ * Payload is E-utilities GET params plus `op=esearch|efetch`; see `api/pubmedUpstream.ts`.
  */
 export const PUBMED_PROXY_URL = '/api/pubmed';
 
