@@ -30,6 +30,3 @@ api/pubmed.js
 api/pubmed.d.ts
 # Same for root TS sources (tsc emit); keep only `.ts` sources.
 vite.config.js
-# Compiled siblings under `api/` (avoid Vercel path collisions + junk in git)
-api/pubmedUpstream.js
-api/pubmedUpstream.d.ts

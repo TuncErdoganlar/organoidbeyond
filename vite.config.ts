@@ -14,7 +14,7 @@ import {
   proxyFetchPubmed,
   resolvePubmedUpstreamUrl,
   searchParamsFromNodeRequest,
-} from './api/pubmedUpstream';
+} from './api/pubmed';
 
 function pubmedProxyPlugin(mode: string): Plugin {
   const serverApiKey = () => loadEnv(mode, process.cwd(), '').PUBMED_API_KEY?.trim();
