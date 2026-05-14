@@ -1,7 +1,26 @@
 /* -----------------------------------------------------------------------------
-   Global stylesheet. Step 1 only needs Tailwind's base/components/utilities
-   layers registered so the project builds. Step 2 will add theme tokens.
+   Global stylesheet.
    ----------------------------------------------------------------------------- */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Body baseline — the dashboard relies on `min-h-screen` on the root so the
+   gradient never ends mid-scroll. */
+@layer base {
+  html, body, #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11'; /* Inter stylistic sets */
+  }
+}
+
+/* Small helpers used by the components — kept here so they're tree-shaken
+   alongside the rest of the CSS. */
+@layer components {
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50;
+  }
+}

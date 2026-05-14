@@ -1,23 +1,45 @@
 /** @type {import('tailwindcss').Config} */
 // -----------------------------------------------------------------------------
-// Tailwind configuration. Step 1 only needs Tailwind to be wired in so the
-// scaffolded entry file compiles. Step 2 will extend the theme with the
-// scientific-dashboard palette.
+// Tailwind configuration tuned for a "clean scientific" dashboard:
+//   - Slate-based neutral palette (calm, paper-like).
+//   - Blue accent for actionable controls.
+//   - One subtle category accent per topic so chips are recognizable without
+//     screaming.
 // -----------------------------------------------------------------------------
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        // Placeholder brand palette — will be tuned in Step 2.
+        // Primary brand / action color (focus rings, active states, links).
         brand: {
-          50:  '#f0f7ff',
+          50:  '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
           500: '#2563eb',
-          700: '#1d4ed8',
+          600: '#1d4ed8',
+          700: '#1e40af',
+        },
+        // Subtle category accents. Kept low-saturation so cards still read as
+        // a unified set — the category dot is a hint, not a decoration.
+        category: {
+          organoid:    '#0d9488', // teal-600
+          cancer:      '#dc2626', // red-600
+          crispr:      '#7c3aed', // violet-600
+          epigenetics: '#ca8a04', // yellow-600
+          gene:        '#0284c7', // sky-600
+          other:       '#64748b', // slate-500
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        // Inter is loaded via Google Fonts in index.html (see <link>).
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
+      boxShadow: {
+        // A soft card shadow that doesn't fight the paper aesthetic.
+        card: '0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06)',
+        'card-hover':
+          '0 4px 12px -2px rgb(15 23 42 / 0.08), 0 2px 6px -1px rgb(15 23 42 / 0.06)',
       },
     },
   },
