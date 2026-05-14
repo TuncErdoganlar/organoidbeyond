@@ -29,13 +29,14 @@ export type Category =
 /**
  * The time-range filter exposed to the user. The string codes are kept
  * deliberately short because they end up in URLs, query keys, and analytics.
+ *   1w  → last 1 week
  *   1m  → last 1 month
  *   3m  → last 3 months
  *   6m  → last 6 months
  *   1y  → last 1 year
  *   2y  → last 2 years
  */
-export type TimeWindow = '1m' | '3m' | '6m' | '1y' | '2y';
+export type TimeWindow = '1w' | '1m' | '3m' | '6m' | '1y' | '2y';
 
 /**
  * The normalized article shape the UI consumes. Every field that can be
@@ -104,6 +105,12 @@ export interface FetchArticlesOptions {
    * `null`/omitted/`GENERAL_MB` → base query only.
    */
   topic?: Category | null;
+  /**
+   * Free-text topic the user typed into the search textarea. Each whitespace-
+   * separated token is AND'd as a `[tiab]` clause (or as a quoted phrase if
+   * the user wrapped it in quotes). Combined with `topic` if both are set.
+   */
+  topicText?: string;
   /** Override the default Mol-Bio/Genetics query if needed. */
   query?: string;
   /** Max articles to return. PubMed caps a single ESearch at 10_000. */

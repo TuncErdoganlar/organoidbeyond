@@ -8,7 +8,7 @@
 export const PUBMED_BASE_URL = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils';
 
 /**
- * Same-origin PubMed gateway. The browser talks to `/api/pubmed`; Vercel (or Vite’s
+ * Same-origin PubMed gateway. The browser talks to `/api/pubmed`; Vercel (or Vite's
  * dev/preview middleware) forwards to `e*.ncbi.nlm.nih.gov`, avoiding blocked
  * cross-origin calls in production browsers.
  *
@@ -27,8 +27,16 @@ export const PUBMED_PROXY_URL = '/api/pubmed';
 export const DEFAULT_QUERY =
   '("Molecular Biology"[MeSH Terms] OR "Genetics"[MeSH Terms]) AND hasabstract[text]';
 
-/** Default page size for a single ESearch. NCBI's hard max is 10_000. */
-export const DEFAULT_PAGE_SIZE = 50;
+/** Default page size for a single ESearch. NCBI's hard max is 10_000.
+ *
+ * We pull a larger first page than the prior 50 so that relevance filtering
+ * (see `articleAggregator.service.ts`) still leaves a healthy result set after
+ * dropping off-topic hits. EFetch is chunked in groups of 100, so a multiple
+ * of 100 keeps batching efficient. */
+export const DEFAULT_PAGE_SIZE = 100;
+
+/** How many more PMIDs to pull each time the user clicks "Load more". */
+export const LOAD_MORE_PAGE_SIZE = 100;
 
 /** Axios timeout. PubMed is usually <1s but we add headroom for retries. */
 export const REQUEST_TIMEOUT_MS = 15_000;

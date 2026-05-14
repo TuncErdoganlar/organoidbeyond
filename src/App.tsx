@@ -3,8 +3,8 @@
 // THE DASHBOARD
 //
 // Top-level composition. Owns:
-//   - The selected `window` (TimeWindow) and `category` (Category | null)
-//     filter state.
+//   - The selected `window` (TimeWindow), `category` (Category | null), and
+//     `topicText` (free-text from the textarea) filter state.
 //   - The `useArticles` hook that performs the actual PubMed fetch.
 //   - The decision tree of *which* sub-view to render (initial empty / loading
 //     skeletons / error / no-results / grid of cards).
@@ -15,11 +15,13 @@
 //   - Selecting a different topic **without** a new Search re-filters the
 //     cached list client-side.
 //   - Changing the time window after a successful search triggers a fresh
-//     PubMed fetch but keeps the selected topic chip. While idle/error,
-//     changing the window only updates local state.
+//     PubMed fetch but keeps the selected topic chip + topicText. While
+//     idle/error, changing the window only updates local state.
+//   - "Load more" pages additional PubMed results using the same params.
 // -----------------------------------------------------------------------------
 
 import { useMemo, useState, type ReactNode } from 'react';
+import { Loader2, ChevronDown } from 'lucide-react';
 import { Header } from './components/Header';
 import { ControlPanel } from './components/ControlPanel';
 import { ArticleGrid } from './components/ArticleGrid';
@@ -33,9 +35,20 @@ export default function App() {
   // ----- Filter state (owned here so a single source of truth exists). -----
   const [window, setWindow] = useState<TimeWindow>('3m');
   const [category, setCategory] = useState<Category | null>(null);
+  const [topicText, setTopicText] = useState<string>('');
 
   // ----- Data state — comes from the service-layer hook. -----
-  const { data, status, error, search, lastWindow, lastSearchTopic } = useArticles();
+  const {
+    data,
+    status,
+    error,
+    search,
+    loadMore,
+    loadingMore,
+    canLoadMore,
+    lastWindow,
+    lastSearchTopic,
+  } = useArticles();
 
   // ----- Derived: count articles per category for the chip labels. -----
   // Memoized so a re-render from filter-state changes doesn't recompute.
@@ -61,18 +74,19 @@ export default function App() {
 
   /** Search / retry: PubMed fetch using the current time window and topic (All = base query only). */
   const handleSearch = () => {
-    void search({ window, topic: category });
+    void search({ window, topic: category, topicText });
   };
 
   /**
    * Time-window pills update local state always. After results have loaded once,
    * a window change reruns Search automatically so the dataset matches the UI.
-   * The selected topic is preserved so filtering stays coherent across windows.
+   * The selected topic + free-text are preserved so filtering stays coherent
+   * across windows.
    */
   const handleWindowChange = (next: TimeWindow) => {
     setWindow(next);
     if (status === 'success') {
-      void search({ window: next, topic: category });
+      void search({ window: next, topic: category, topicText });
     }
   };
 
@@ -88,7 +102,37 @@ export default function App() {
   } else if (visibleArticles.length === 0) {
     body = <EmptyState variant="no-results" onClear={() => setCategory(null)} />;
   } else {
-    body = <ArticleGrid articles={visibleArticles} />;
+    body = (
+      <>
+        <ArticleGrid articles={visibleArticles} />
+        {/* "Load more" surfaces another page of PubMed results using the same
+            search params. We hide it once the upstream returns an empty page
+            (canLoadMore=false). The button is the only paging UI — relevance
+            filtering happens server- AND client-side, so each click can return
+            anywhere from 0 to LOAD_MORE_PAGE_SIZE new cards. */}
+        {canLoadMore && (
+          <div className="mt-6 flex justify-center">
+            <button
+              type="button"
+              onClick={() => void loadMore()}
+              disabled={loadingMore}
+              className={[
+                'focus-ring inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-card transition',
+                'hover:bg-slate-50',
+                loadingMore ? 'cursor-not-allowed opacity-70' : '',
+              ].join(' ')}
+            >
+              {loadingMore ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <ChevronDown className="h-4 w-4" aria-hidden="true" />
+              )}
+              {loadingMore ? 'Loading more…' : 'Load more results'}
+            </button>
+          </div>
+        )}
+      </>
+    );
   }
 
   return (
@@ -100,6 +144,8 @@ export default function App() {
         onWindowChange={handleWindowChange}
         category={category}
         onCategoryChange={setCategory}
+        topicText={topicText}
+        onTopicTextChange={setTopicText}
         categoryCounts={categoryCounts}
         showCategoryCounts={status === 'success'}
         onSearch={handleSearch}
@@ -157,6 +203,8 @@ export default function App() {
 // -----------------------------------------------------------------------------
 function humanizeWindow(w: TimeWindow): string {
   switch (w) {
+    case '1w':
+      return 'week';
     case '1m':
       return '1 month';
     case '3m':

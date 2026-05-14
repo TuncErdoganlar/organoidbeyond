@@ -14,6 +14,7 @@ import type { TimeWindow } from '@/types/article.types';
 /** Display labels for each window — kept here so the type and labels live
  *  together. Order matters: this is the visual left-to-right order. */
 const WINDOW_OPTIONS: ReadonlyArray<{ value: TimeWindow; label: string }> = [
+  { value: '1w', label: '1 week' },
   { value: '1m', label: '1 month' },
   { value: '3m', label: '3 months' },
   { value: '6m', label: '6 months' },

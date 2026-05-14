@@ -11,7 +11,7 @@
 // as a safety net that handles partial dates with conservative heuristics.
 // -----------------------------------------------------------------------------
 
-import { subMonths, subYears, format, isAfter, isBefore } from 'date-fns';
+import { subDays, subMonths, subYears, format, isAfter, isBefore } from 'date-fns';
 import type { TimeWindow } from '@/types/article.types';
 
 export interface DateRange {
@@ -30,6 +30,9 @@ export function resolveTimeWindow(window: TimeWindow, now: Date = new Date()): D
   let minDate: Date;
 
   switch (window) {
+    case '1w':
+      minDate = subDays(now, 7);
+      break;
     case '1m':
       minDate = subMonths(now, 1);
       break;

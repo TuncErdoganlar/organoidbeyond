@@ -75,7 +75,7 @@ export async function searchPmids(params: ESearchParams): Promise<string[]> {
       retmode: 'json',
       retmax: params.pageSize,
       retstart: params.pageOffset ?? 0,
-      sort: 'pub_date', // newest first
+      sort: 'pub_date',
       tool,
       email,
       api_key: apiKey,
@@ -143,20 +143,12 @@ export async function fetchArticlesByIds(
 
 // -----------------------------------------------------------------------------
 // 3. Normalization — PubMed XML → domain `Article`.
-//
-// PubMed's XML is verbose and irregular. We pull it apart defensively, using
-// `toArray` everywhere a "0, 1, or many" relationship lives, and `textOf` to
-// extract string content out of nodes that might be string-or-object.
 // -----------------------------------------------------------------------------
 
 interface PubmedRoot {
   PubmedArticleSet?: { PubmedArticle?: PubmedArticleNode | PubmedArticleNode[] };
 }
 
-// We type the XML tree as `any`-like records on purpose: this is the boundary
-// between an external, untyped data source and our typed domain. Trying to
-// pin types here gives a false sense of safety — the runtime shape is what
-// matters and `normalizePubmedArticle` validates field-by-field.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type PubmedArticleNode = any;
 
@@ -165,21 +157,11 @@ function normalizePubmedArticle(node: PubmedArticleNode): Article | null {
   const articleNode = medline?.Article;
   if (!medline || !articleNode) return null;
 
-  // ----- PMID -----
-  // `PMID` is `{ '#text': '12345', '@_Version': '1' }` in EFetch XML.
   const pmid = textOf(medline.PMID);
   if (!pmid) return null;
 
-  // ----- Title -----
-  // ArticleTitle can be a string or an object with `#text` plus inline tags.
-  // `stripMarkup` collapses any embedded <i>/<sub>/<sup> formatting.
   const title = stripMarkup(textOf(articleNode.ArticleTitle));
 
-  // ----- Authors -----
-  // PubMed wraps authors in `<AuthorList><Author>…</Author></AuthorList>`.
-  // Each Author can have ForeName + LastName + Initials, OR a CollectiveName
-  // (for consortia). We prefer "LastName Initials" because that's the PubMed
-  // display convention.
   const authorsRaw = toArray(articleNode.AuthorList?.Author);
   const authors = authorsRaw
     .map((a: PubmedArticleNode) => {
@@ -191,24 +173,14 @@ function normalizePubmedArticle(node: PubmedArticleNode): Article | null {
     })
     .filter((s: string): s is string => Boolean(s));
 
-  // ----- Journal -----
   const journal = stripMarkup(textOf(articleNode.Journal?.Title));
 
-  // ----- Abstract -----
-  // AbstractText can be a single string, a single object, or an array of
-  // labeled sections (Background / Methods / Results / Conclusions). When
-  // sections are present we join them with double newlines so the snippet
-  // builder picks the most informative opening.
   const absParts = toArray(articleNode.Abstract?.AbstractText).map((p) =>
     stripMarkup(textOf(p)),
   );
   const abstract = absParts.join('\n\n').trim();
   const abstractSnippet = buildSnippet(abstract);
 
-  // ----- Publication date -----
-  // PubDate lives in `Journal.JournalIssue.PubDate`. It can have Year+Month+
-  // Day, Year+Month, Year only, or `MedlineDate` (free-form). We render the
-  // "best" string we have, then parse it with `parsePubmedDate`.
   const pubNode = articleNode.Journal?.JournalIssue?.PubDate ?? {};
   const yearStr = textOf(pubNode.Year);
   const monthStr = textOf(pubNode.Month);
@@ -218,17 +190,12 @@ function normalizePubmedArticle(node: PubmedArticleNode): Article | null {
     [yearStr, monthStr, dayStr].filter(Boolean).join(' ') || medlineDate || '';
   const pubDate = parsePubmedDate(pubDateRaw) ?? new Date(0);
 
-  // ----- DOI -----
-  // DOI lives inside `ArticleIdList`, which contains `ArticleId` entries
-  // tagged with `IdType` attributes.
   const articleIds = toArray(node?.PubmedData?.ArticleIdList?.ArticleId);
   const doiNode = articleIds.find(
     (a: PubmedArticleNode) => a?.['@_IdType'] === 'doi',
   );
   const doi = doiNode ? textOf(doiNode) : undefined;
 
-  // ----- MeSH terms -----
-  // MeshHeading list → each entry has DescriptorName with the term we want.
   const meshTerms = toArray(medline.MeshHeadingList?.MeshHeading)
     .map((mh: PubmedArticleNode) => textOf(mh?.DescriptorName))
     .filter(Boolean);
@@ -244,8 +211,6 @@ function normalizePubmedArticle(node: PubmedArticleNode): Article | null {
     abstractSnippet,
     doi,
     pubmedUrl: `https://pubmed.ncbi.nlm.nih.gov/${pmid}/`,
-    // `categories` is filled in by the aggregator; default to a placeholder
-    // so the type is fully formed at this point.
     categories: ['GENERAL_MB'],
     meshTerms,
   };
