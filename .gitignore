@@ -24,3 +24,10 @@ pnpm-debug.log*
 .env
 .env.local
 .env.*.local
+
+# Never commit compiled JS next to `api/*.ts` — Vercel treats both as `api/pubmed` and errors.
+api/pubmed.js
+api/pubmed.d.ts
+# Same for root TS sources (tsc emit); keep only `.ts` sources.
+vite.config.js
+pubmedUpstream.js
