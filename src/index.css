@@ -1,0 +1,7 @@
+/* -----------------------------------------------------------------------------
+   Global stylesheet. Step 1 only needs Tailwind's base/components/utilities
+   layers registered so the project builds. Step 2 will add theme tokens.
+   ----------------------------------------------------------------------------- */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
