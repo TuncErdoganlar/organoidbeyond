@@ -50,6 +50,7 @@ export default function App() {
     canLoadMore,
     lastWindow,
     lastSearchTopic,
+    lastFetchedAt,
   } = useArticles();
 
   // ----- Derived: count articles per category for the chip labels. -----
@@ -157,6 +158,18 @@ export default function App() {
               )}
               .
             </span>
+            {lastFetchedAt && (
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                title={lastFetchedAt.toISOString()}
+              >
+                <span
+                  className="h-1.5 w-1.5 rounded-full bg-emerald-500"
+                  aria-hidden="true"
+                />
+                Live · fetched {formatFetchedAt(lastFetchedAt)}
+              </span>
+            )}
           </div>
         )}
 
@@ -188,6 +201,16 @@ export default function App() {
 // Small helper kept local — the result summary line is the only place that
 // needs to humanize a TimeWindow code, so it doesn't earn a slot in `utils/`.
 // -----------------------------------------------------------------------------
+/** Renders a Date as a short, friendly "moments ago / 23s ago / 4:31 PM"
+ *  string. We deliberately don't use a full i18n date library here — this is
+ *  one line of UX chrome and the existing date-fns helpers are heavier. */
+function formatFetchedAt(when: Date): string {
+  const seconds = Math.max(0, Math.round((Date.now() - when.getTime()) / 1000));
+  if (seconds < 5) return 'just now';
+  if (seconds < 60) return `${seconds}s ago`;
+  return when.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
 function humanizeWindow(w: TimeWindow): string {
   switch (w) {
     case '1w':

@@ -49,6 +49,10 @@ export interface UseArticlesReturn {
   lastWindow: TimeWindow | null;
   /** Topic facet used in the last successful ESearch (`null` = All / not narrowed). */
   lastSearchTopic: Category | null;
+  /** Wall-clock moment the most recent successful search completed. Null when
+   *  no search has succeeded yet. UI uses this to show "fetched at ..." so
+   *  users can see results are live, not stale. */
+  lastFetchedAt: Date | null;
   /** True while a "Load more" request is in flight (distinct from initial loading). */
   loadingMore: boolean;
   /**
@@ -71,6 +75,7 @@ export function useArticles(): UseArticlesReturn {
   const [error, setError] = useState<string | null>(null);
   const [lastWindow, setLastWindow] = useState<TimeWindow | null>(null);
   const [lastSearchTopic, setLastSearchTopic] = useState<Category | null>(null);
+  const [lastFetchedAt, setLastFetchedAt] = useState<Date | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [canLoadMore, setCanLoadMore] = useState(false);
 
@@ -116,6 +121,7 @@ export function useArticles(): UseArticlesReturn {
       setLastSearchTopic(t !== null && t !== 'GENERAL_MB' ? t : null);
       for (const a of articles) seenIdsRef.current.add(a.id);
       setData(articles);
+      setLastFetchedAt(new Date());
       setStatus('success');
 
       // We can offer "Load more" whenever the upstream returned a full page —
@@ -166,6 +172,7 @@ export function useArticles(): UseArticlesReturn {
       }
 
       setData((current) => [...current, ...fresh]);
+      setLastFetchedAt(new Date());
       pageOffsetRef.current += LOAD_MORE_PAGE_SIZE;
 
       // If PubMed returned an empty page (or every PMID was already shown),
@@ -198,6 +205,7 @@ export function useArticles(): UseArticlesReturn {
     setError(null);
     setLastWindow(null);
     setLastSearchTopic(null);
+    setLastFetchedAt(null);
     setLoadingMore(false);
     setCanLoadMore(false);
   }, []);
@@ -208,6 +216,7 @@ export function useArticles(): UseArticlesReturn {
     error,
     lastWindow,
     lastSearchTopic,
+    lastFetchedAt,
     loadingMore,
     canLoadMore,
     search,
