@@ -18,6 +18,8 @@
 //     PubMed fetch but keeps the selected topic chip + topicText. While
 //     idle/error, changing the window only updates local state.
 //   - "Load more" pages additional PubMed results using the same params.
+//   - Theme: handled in `Header` + the boot script in `index.html`. The page
+//     defaults to dark; classes on this shell react to `<html class="dark">`.
 // -----------------------------------------------------------------------------
 
 import { useMemo, useState, type ReactNode } from 'react';
@@ -51,7 +53,6 @@ export default function App() {
   } = useArticles();
 
   // ----- Derived: count articles per category for the chip labels. -----
-  // Memoized so a re-render from filter-state changes doesn't recompute.
   const categoryCounts = useMemo(() => {
     const counts: Partial<Record<Category, number>> = {};
     for (const article of data) {
@@ -71,18 +72,10 @@ export default function App() {
   }, [data, category, lastSearchTopic]);
 
   // ----- Handlers -----
-
-  /** Search / retry: PubMed fetch using the current time window and topic (All = base query only). */
   const handleSearch = () => {
     void search({ window, topic: category, topicText });
   };
 
-  /**
-   * Time-window pills update local state always. After results have loaded once,
-   * a window change reruns Search automatically so the dataset matches the UI.
-   * The selected topic + free-text are preserved so filtering stays coherent
-   * across windows.
-   */
   const handleWindowChange = (next: TimeWindow) => {
     setWindow(next);
     if (status === 'success') {
@@ -91,7 +84,6 @@ export default function App() {
   };
 
   // ----- Body composition -----
-  // We pick exactly one of: initial empty / loading / error / no-results / grid.
   let body: ReactNode;
   if (status === 'idle') {
     body = <EmptyState variant="initial" />;
@@ -105,11 +97,6 @@ export default function App() {
     body = (
       <>
         <ArticleGrid articles={visibleArticles} />
-        {/* "Load more" surfaces another page of PubMed results using the same
-            search params. We hide it once the upstream returns an empty page
-            (canLoadMore=false). The button is the only paging UI — relevance
-            filtering happens server- AND client-side, so each click can return
-            anywhere from 0 to LOAD_MORE_PAGE_SIZE new cards. */}
         {canLoadMore && (
           <div className="mt-6 flex justify-center">
             <button
@@ -119,6 +106,7 @@ export default function App() {
               className={[
                 'focus-ring inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-card transition',
                 'hover:bg-slate-50',
+                'dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700',
                 loadingMore ? 'cursor-not-allowed opacity-70' : '',
               ].join(' ')}
             >
@@ -136,7 +124,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-full bg-slate-50">
+    <div className="min-h-full bg-slate-50 dark:bg-slate-950">
       <Header />
 
       <ControlPanel
@@ -153,17 +141,16 @@ export default function App() {
       />
 
       <main className="mx-auto w-full max-w-6xl px-6 pb-16">
-        {/* Result summary line — shown only once we have a successful fetch. */}
         {status === 'success' && data.length > 0 && (
-          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2 text-sm text-slate-600">
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2 text-sm text-slate-600 dark:text-slate-400">
             <span>
-              Showing <strong className="text-slate-900">{visibleArticles.length}</strong>
+              Showing <strong className="text-slate-900 dark:text-slate-100">{visibleArticles.length}</strong>
               {category !== null && ' filtered'} of{' '}
-              <strong className="text-slate-900">{data.length}</strong> articles
+              <strong className="text-slate-900 dark:text-slate-100">{data.length}</strong> articles
               {lastWindow && (
                 <>
                   {' '}from the last{' '}
-                  <strong className="text-slate-900">
+                  <strong className="text-slate-900 dark:text-slate-100">
                     {humanizeWindow(lastWindow)}
                   </strong>
                 </>
@@ -176,15 +163,15 @@ export default function App() {
         {body}
       </main>
 
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-6 py-4 text-xs text-slate-500">
+      <footer className="border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-6 py-4 text-xs text-slate-500 dark:text-slate-400">
           <span>
             Data courtesy of{' '}
             <a
               href="https://pubmed.ncbi.nlm.nih.gov/"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium text-slate-700 hover:text-brand-600"
+              className="font-medium text-slate-700 hover:text-brand-600 dark:text-slate-200 dark:hover:text-brand-400"
             >
               NCBI PubMed E-utilities
             </a>

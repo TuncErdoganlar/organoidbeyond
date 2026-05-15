@@ -1,15 +1,11 @@
 // src/components/CategoryFilter.tsx
 // -----------------------------------------------------------------------------
 // Single-select topic chip row. The "All" chip clears the filter.
-//
-// Topic order comes from `TOPIC_CHIP_ORDER` in `categories.config.ts`.
-// Selecting a chip + Search narrows PubMed ESearch via `composePubMedQuery`.
 // -----------------------------------------------------------------------------
 
 import { CATEGORY_LABELS, TOPIC_CHIP_ORDER } from '@/config/categories.config';
 import type { Category } from '@/types/article.types';
 
-/** Accent dots — Tailwind safelist relies on literal strings here. */
 const CATEGORY_DOT: Record<Category, string> = {
   ORGANOID: 'bg-category-organoid',
   STEM_CELLS: 'bg-category-stemcell',
@@ -23,10 +19,8 @@ const CATEGORY_DOT: Record<Category, string> = {
 };
 
 export interface CategoryFilterProps {
-  /** `null` means "All topics" (full base query only). */
   value: Category | null;
   onChange: (next: Category | null) => void;
-  /** Optional counts per category for chip labels such as Organoid (12). */
   counts?: Partial<Record<Category, number>>;
   disabled?: boolean;
 }
@@ -83,8 +77,8 @@ function Chip({ active, onClick, label, dotClass, disabled }: ChipProps) {
       className={[
         'focus-ring inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition',
         active
-          ? 'border-brand-500 bg-brand-50 text-brand-700'
-          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900',
+          ? 'border-brand-500 bg-brand-50 text-brand-700 dark:border-brand-400 dark:bg-brand-500/20 dark:text-brand-200'
+          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-50',
         disabled ? 'cursor-not-allowed opacity-60' : '',
       ].join(' ')}
     >

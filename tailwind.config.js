@@ -1,12 +1,18 @@
 /** @type {import('tailwindcss').Config} */
 // -----------------------------------------------------------------------------
 // Tailwind configuration tuned for a "clean scientific" dashboard:
-//   - Slate-based neutral palette (calm, paper-like).
-//   - Blue accent for actionable controls.
+//   - Slate-based neutral palette (calm, paper-like in light mode).
+//   - Blue accent for actionable controls — slightly brighter in dark mode.
 //   - One subtle category accent per topic so chips are recognizable without
 //     screaming.
+//
+// Dark mode is **class-based** so we can toggle it deterministically (a
+// boot-time script in index.html flips `<html class="dark">` before React
+// mounts, avoiding a flash of light theme). See `src/main.tsx` and the Header
+// toggle for the runtime side.
 // -----------------------------------------------------------------------------
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
@@ -16,6 +22,7 @@ export default {
           50:  '#eff6ff',
           100: '#dbeafe',
           200: '#bfdbfe',
+          400: '#60a5fa',
           500: '#2563eb',
           600: '#1d4ed8',
           700: '#1e40af',

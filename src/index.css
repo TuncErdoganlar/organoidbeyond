@@ -12,15 +12,16 @@
     height: 100%;
   }
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
+    @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11'; /* Inter stylistic sets */
   }
 }
 
 /* Small helpers used by the components — kept here so they're tree-shaken
-   alongside the rest of the CSS. */
+   alongside the rest of the CSS. The dark-mode offset ring matches the page
+   background so the focus ring still looks "lifted" against either theme. */
 @layer components {
   .focus-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50 dark:focus-visible:ring-brand-400 dark:focus-visible:ring-offset-slate-950;
   }
 }

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,6 +7,24 @@
       name="description"
       content="OrganoidBeyond — a research dashboard for the latest Molecular Biology and Genetics papers from PubMed."
     />
+    <meta name="color-scheme" content="dark light" />
+    <!-- Apply the user's saved theme BEFORE React mounts so the first paint
+         matches the chosen theme (no light-mode flash). Defaults to dark when
+         nothing is stored, per product preference. The Header toggle writes
+         `organoidbeyond.theme` and flips the class. -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('organoidbeyond.theme');
+          var dark = saved ? saved === 'dark' : true;
+          var root = document.documentElement;
+          if (dark) root.classList.add('dark');
+          else root.classList.remove('dark');
+        } catch (_) {
+          /* localStorage blocked → keep the default `dark` class from <html>. */
+        }
+      })();
+    </script>
     <link rel="preconnect" href="https://eutils.ncbi.nlm.nih.gov" />
     <!-- Inter via Google Fonts (preconnect first so the request starts ASAP). -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -17,7 +35,7 @@
     />
     <title>OrganoidBeyond — Latest Molecular Biology &amp; Genetics Research</title>
   </head>
-  <body class="bg-slate-50 text-slate-900 antialiased">
+  <body class="bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

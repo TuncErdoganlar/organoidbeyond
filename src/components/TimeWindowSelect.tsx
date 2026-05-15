@@ -1,18 +1,10 @@
 // src/components/TimeWindowSelect.tsx
 // -----------------------------------------------------------------------------
-// A segmented-button control for picking the publication time window. Renders
-// as a row of pill buttons; the active one gets the brand background.
-//
-// Why a controlled component?
-//   The parent (Dashboard) owns the "selected window" state because it also
-//   owns the data fetch — keeping a single source of truth avoids the classic
-//   bug where the UI says "6m" but the last fetch was for "3m".
+// A segmented-button control for picking the publication time window.
 // -----------------------------------------------------------------------------
 
 import type { TimeWindow } from '@/types/article.types';
 
-/** Display labels for each window — kept here so the type and labels live
- *  together. Order matters: this is the visual left-to-right order. */
 const WINDOW_OPTIONS: ReadonlyArray<{ value: TimeWindow; label: string }> = [
   { value: '1w', label: '1 week' },
   { value: '1m', label: '1 month' },
@@ -25,7 +17,6 @@ const WINDOW_OPTIONS: ReadonlyArray<{ value: TimeWindow; label: string }> = [
 export interface TimeWindowSelectProps {
   value: TimeWindow;
   onChange: (next: TimeWindow) => void;
-  /** Disable interaction while a fetch is in flight. */
   disabled?: boolean;
 }
 
@@ -34,7 +25,7 @@ export function TimeWindowSelect({ value, onChange, disabled }: TimeWindowSelect
     <div
       role="radiogroup"
       aria-label="Publication time window"
-      className="inline-flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-card"
+      className="inline-flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-card dark:border-slate-700 dark:bg-slate-900"
     >
       {WINDOW_OPTIONS.map((opt) => {
         const isActive = opt.value === value;
@@ -49,9 +40,9 @@ export function TimeWindowSelect({ value, onChange, disabled }: TimeWindowSelect
             className={[
               'focus-ring rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
               isActive
-                ? 'bg-brand-500 text-white shadow-sm'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
-              disabled ? 'cursor-not-allowed opacity-60 hover:bg-transparent' : '',
+                ? 'bg-brand-500 text-white shadow-sm dark:bg-brand-500'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-50',
+              disabled ? 'cursor-not-allowed opacity-60 hover:bg-transparent dark:hover:bg-transparent' : '',
             ].join(' ')}
           >
             {opt.label}
